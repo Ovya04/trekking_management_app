@@ -4,12 +4,16 @@ from models.trek import Trek
 from datetime import date, timedelta
 from flask_mail import Message
 from extensions import mail
+from services.email_service import send_email, email_enabled
 
 
 def send_reminder_email(user, trek):
     """
     Sends an HTML email reminder to a user about their upcoming trek.
     """
+    if not email_enabled():
+        print("📪 Email disabled - daily reminders skipped.")
+        return {'skipped': True}
     subject = f"🏔️ Reminder: Your trek '{trek.trek_name}' starts soon!"
 
     html_body = f"""
@@ -75,16 +79,9 @@ def send_reminder_email(user, trek):
     """
 
     try:
-        msg = Message(
-            subject=subject,
-            recipients=[user.email],
-            html=html_body
-        )
-        mail.send(msg)
-        print(f"✅ Reminder sent to {user.email} for trek: {trek.trek_name}")
+        send_email(subject, [user.email], html_body)
     except Exception as e:
         print(f"❌ Failed to send reminder to {user.email}: {e}")
-
 
 @celery.task
 def send_daily_reminders():
