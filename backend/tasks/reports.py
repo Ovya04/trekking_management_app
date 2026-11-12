@@ -7,6 +7,7 @@ from flask_mail import Message
 from sqlalchemy import func
 from datetime import datetime
 from flask import current_app
+from services.email_service import send_email, email_enabled
 
 
 @celery.task
@@ -16,6 +17,9 @@ def send_monthly_report():
     Generates an HTML monthly activity report
     and emails it to the Admin.
     """
+    if not email_enabled():
+       print("📪 Email disabled - monthly report skipped.")
+       return {'skipped': True}
     print("📋 Running monthly report job...")
 
     now = datetime.utcnow()
