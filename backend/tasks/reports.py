@@ -170,12 +170,7 @@ def send_monthly_report():
     admin_email = current_app.config.get('ADMIN_EMAIL', admin.email)
 
     try:
-        msg = Message(
-            subject=f"📊 Monthly Trekking Report — {month_label}",
-            recipients=[admin_email],
-            html=html_body
-        )
-        mail.send(msg)
+        send_email(f"📊 Monthly Trekking Report — {month_label}", [admin_email], html_body)
         print(f"✅ Monthly report sent to {admin_email}")
     except Exception as e:
         print(f"❌ Failed to send report: {e}")
