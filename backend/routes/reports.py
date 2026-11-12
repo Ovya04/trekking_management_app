@@ -5,6 +5,7 @@ from models.user import User
 from utils.decorators import role_required
 from extensions import db
 from datetime import datetime
+from services.email_service import send_email, email_enabled
 
 reports_bp = Blueprint('reports', __name__)
 
@@ -53,6 +54,8 @@ def trigger_monthly_report():
     Directly generates and sends the monthly report email.
     Runs synchronously - no Celery needed.
     """
+    if not email_enabled():
+        return jsonify({'error': 'Email sending is currently disabled.'}), 503
     try:
         from models.trek import Trek
         from models.booking import Booking
@@ -160,13 +163,7 @@ def trigger_monthly_report():
         admin = User.query.filter_by(role='admin').first()
         admin_email = current_app.config.get('ADMIN_EMAIL', admin.email)
 
-        msg = Message(
-            subject=f'📊 Monthly Trekking Report — {month_label}',
-            recipients=[admin_email],
-            html=html_body
-        )
-        mail.send(msg)
-
+        send_email(f'📊 Monthly Trekking Report — {month_label}', [admin_email], html_body)
         return jsonify({
             'message': f'Monthly report for {month_label} sent to {admin_email} successfully.'
         }), 200
